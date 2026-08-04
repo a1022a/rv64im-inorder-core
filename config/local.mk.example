@@ -1,0 +1,8 @@
+# Copy to config/local.mk and adjust for the local machine.
+#
+# This file is intentionally an example. Machine-specific paths belong in
+# ignored config/local.mk, not in public build defaults.
+
+NEMU_REF_SO := /path/to/riscv64-nemu-ref-patched.so
+AM_KERNELS_DIR := /path/to/am-kernels
+DEFAULT_DUMMY_IMG := /path/to/dummy-riscv64-npc.bin

@@ -1,0 +1,79 @@
+# VS Code, Codex and local IDE state
+.vscode/
+.codex/
+.agents/
+.settings/
+.project
+.library_mapping.xml
+
+# Source indexing files
+cscope.files
+cscope.in.out
+cscope.out
+cscope.po.out
+tags
+
+# Machine-local configuration
+config/local.mk
+synth/config/tech_setup.tcl
+synth/config/local_paths.tcl
+.env
+.env.*
+
+# Build and run outputs
+build/
+out/
+obj_dir/
+work/
+results_cpu_*/
+
+# Simulation artifacts
+*.log
+*.vcd
+*.fst
+*.fsdb
+*.vpd
+*.wlf
+*.gtkw
+
+# Compiled files
+*.o
+*.a
+*.so
+Vtop
+Vtop.*
+
+# Synthesis, STA and physical-design outputs
+*.db
+*.lib
+*.lef
+*.gds
+*.ndm
+*.sdf
+*.spef
+*.ddc
+*.vdb
+
+# Archives and virtual-machine files
+*.tar
+*.tar.gz
+*.zip
+*.7z
+*.vmdk
+*.ova
+*.ovf
+
+# Credentials and licenses
+*.pem
+*.key
+*.token
+license.dat
+license.*
+*.lic
+
+# Temporary files
+*.swp
+*.tmp
+*~
+__pycache__/
+*.pyc
