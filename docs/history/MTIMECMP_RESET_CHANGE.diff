@@ -1,0 +1,11 @@
+--- /home/icer/zrv_milestones/zrv_final_regression_20260803_145427/source_snapshot/npc_source/vsrc/bus/zrv_clint.sv	2026-08-02 17:42:55.186538373 +0800
++++ /home/icer/ysyx-workbench/npc_zrv_v1_2_cleanup_try1/vsrc/bus/zrv_clint.sv	2026-08-03 16:57:43.743415385 +0800
+@@ -37,7 +37,7 @@
+     zrv_reg #(`ZRV_DATA_WIDTH,0) reg_mtime(clk, !rstn, mtime_next, mtime, 1'b1);
+ 
+     wire mtimecmp_wen = (mtimecmp_cs & i_clt_wen);
+-    zrv_reg #(`ZRV_DATA_WIDTH,0) reg_mtimecmp(clk, !rstn, i_clt_wdata, mtimecmp, mtimecmp_wen);
++    zrv_reg #(`ZRV_DATA_WIDTH,64'hffff_ffff_ffff_ffff) reg_mtimecmp(clk, !rstn, i_clt_wdata, mtimecmp, mtimecmp_wen);
+ 
+     wire msip_wen = (msip_cs & i_clt_wen);
+     wire [31:0] msip_next = {31'b0,i_clt_wdata[0]};

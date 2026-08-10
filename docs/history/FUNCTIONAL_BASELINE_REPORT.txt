@@ -1,0 +1,30 @@
+ZRV cleanup final regression
+
+RTL functional change:
+  zrv_clint.sv:
+  mtimecmp reset value changed from 0 to
+  64'hffff_ffff_ffff_ffff.
+
+Reason:
+  Prevent MTIP from being pending immediately after reset.
+
+Results:
+  Compile:                 PASS
+  CPU-tests:              33/33 PASS
+  klib-tests:             33/33 PASS
+  dedicated Klib unit:      8/8 PASS
+  MicroBench:                  PASS
+  AM help/hello:               PASS
+  AM RTC uptime:               PASS
+  timer128 interrupt:          PASS
+  DiffTest fatal markers:         0
+
+Timer128:
+  interrupt PC matched: yes
+  handler executed: yes
+  mret resumed execution: yes
+  timeout exit 124: expected
+
+Scope:
+  Only the mtimecmp reset value was changed in RTL.
+  Synthesis and STA are not yet included.

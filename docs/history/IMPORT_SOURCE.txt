@@ -1,0 +1,12 @@
+Project:
+  rv64im-inorder-core
+
+Imported from:
+  /home/icer/zrv_milestones/zrv_cleanup_final_20260803_174843/source
+
+Imported at:
+  2026-08-03T21:45:01+08:00
+
+Protected original locations:
+  /home/icer/zrv_milestones/zrv_cleanup_final_20260803_174843
+  /home/icer/ysyx-workbench/npc_zrv_v1_2_cleanup_try1

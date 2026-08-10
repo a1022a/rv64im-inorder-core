@@ -2,9 +2,8 @@
 # Excludes simulation top rv64im_core_sim_top, DPI-only logic, C/C++, testbench code,
 # generated files, and backup files.
 #
-# RAM synthesis strategy is TBD. S011HD1P_X32Y2D128_BW.sv is listed only as the
-# current unresolved memory dependency of rv64im_core_ram, not as an approved formal
-# synthesis memory policy.
+# RAM synthesis is selected in rv64im_core_sram64x64: generic behavioral RAM by
+# default, or the ASIC_SRAM macro interface without a vendor model in this repository.
 ./rtl/vsrc/rv64im_core_defines.sv
 ./rtl/vsrc/bus/rv64im_core_1toN.sv
 ./rtl/vsrc/bus/rv64im_core_2to1.sv
@@ -13,6 +12,7 @@
 ./rtl/vsrc/bus/rv64im_core_clint.sv
 ./rtl/vsrc/bus/rv64im_core_Nto1.sv
 ./rtl/vsrc/cache/rv64im_core_dcache.sv
+./rtl/vsrc/cache/rv64im_core_sram64x64.sv
 ./rtl/vsrc/cache/rv64im_core_ram.sv
 ./rtl/vsrc/core/rv64im_core_core.sv
 ./rtl/vsrc/core/rv64im_core_pipe_ctrl.sv
@@ -32,7 +32,6 @@
 ./rtl/vsrc/ifu/rv64im_core_satcnt.sv
 ./rtl/vsrc/mem/rv64im_core_ls.sv
 ./rtl/vsrc/mem/rv64im_core_lsu.sv
-./rtl/vsrc/units/S011HD1P_X32Y2D128_BW.sv
 ./rtl/vsrc/units/rv64im_core_add4to2.sv
 ./rtl/vsrc/units/rv64im_core_add_full.sv
 ./rtl/vsrc/units/rv64im_core_cla4.sv

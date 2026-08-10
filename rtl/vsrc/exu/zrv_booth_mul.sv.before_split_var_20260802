@@ -1,0 +1,109 @@
+module zrv_booth_mul (
+    input  wire [64:0] rs1,
+    input  wire [64:0] rs2,
+
+    input  wire i_alu_mul_req,
+
+    //output wire [127:0] mul_res, 
+    //output reg  o_alu_mul_ack,
+    output wire [127:0] mul_cas_res1, 
+    output wire [127:0] mul_cas_res2 
+    
+//    input  wire clk,
+//    input  wire rstn    
+);
+
+//`ifdef MULDIV_VERILOG
+	wire [2:0]   booth [31:0];     //booth[31]2^63x, booth[31]2^61x, ...... booth[0]2^1x then -x
+    wire [65:0]  booth_res [31:0]; //32 booth reslut
+    wire [31:0]  booth_add1;       //32 +1
+    wire [129:0] partial_data [33:0]; //0~31: booth_res_ext  32: -x  33: add1 set 
+
+    reg  [33:0] in_34to2 [129:0]; 
+    wire [30:0] ci [130:0];       //ci[130] is unuseful
+    wire [30:0] co [129:0];
+    wire [1:0]  out_34to2 [129:0]; 
+
+    wire [129:0] add_ops;
+    wire [130:0] add_opc;
+    //reg [129:0] add_rs1;
+    //reg [129:0] add_rs2;
+//* gen partial booth
+//[i+2,i+1,i]
+//000	0
+//001	+被乘数
+//010	+被乘数
+//011	+2×被乘数
+//100	-2×被乘数
+//101	-被乘数
+//110	-被乘数
+//111	0
+generate for(genvar i=0;i<32;i=i+1) begin : u_booth
+    assign booth[i] = rs2[2*i +: 3]; // (y62 + y63 -2*y64)*x2^63 + (y60 + y61 -2*y62)*x2^61 + ... + (y0 + y1 -2*y2)*x2^1 - y0x
+    assign booth_res[i] =   ({66{(booth[i]==3'b000) | (booth[i]==3'b111)}} & 66'd0)
+                          | ({66{(booth[i]==3'b001) | (booth[i]==3'b010)}} & {rs1[64],rs1})             // x
+                          | ({66{(booth[i]==3'b101) | (booth[i]==3'b110)}} & {~rs1[64],~rs1[64:0]})     //~x
+                          | ({66{(booth[i]==3'b011)}}                      & {rs1[64:0],1'b0})          //2x
+                          | ({66{(booth[i]==3'b100)}}                      & {~rs1[64:0],1'b1})         //~2x
+                          ;
+    assign booth_add1[i] = booth[i][2] & ~(&booth[i][1:0]);                              //+1 {101,110}
+
+    assign partial_data[i] = {{(129-66-2*i){booth_res[i][65]}},booth_res[i][65:0],{(2*i+1){1'b0}}};
+    assign partial_data[33][2*i+1 +: 2] = {1'b0, booth_add1[i]};    //1 3 ... 63    //+1
+end
+endgenerate
+
+    assign partial_data[32] = rs2[0] ? {{65{~rs1[64]}},~rs1[64:0]} : 130'd0;  //-y0X
+    assign partial_data[33][0]      = rs2[0];
+    assign partial_data[33][129:65] = 65'd0;
+
+//* 32->16 4to2
+always @(*) begin
+    for(integer i=0;i<130;i=i+1) begin
+        for(integer j=0;j<34;j=j+1) begin : u_trans130to34
+            in_34to2[i][j] = partial_data[j][i];    //130bit * 24 -> 34bit *130
+        end
+    end
+end
+
+assign ci[0]      = {31{1'b0}};
+assign add_opc[0] = 1'b0;
+
+generate for(genvar i=0;i<130;i=i+1) begin : u_gen_34to2
+
+    assign ci[i+1] = co[i];
+
+compress_34to2 u_compress_34to2(
+    .in ( in_34to2[i] ),
+    .ci ( ci[i] ),
+    .co ( co[i] ),
+    .s  ( add_ops[i]),
+    .c  ( add_opc[i+1])
+);
+end
+endgenerate
+
+	assign mul_cas_res1 = add_ops[127:0];
+	assign mul_cas_res2 = add_opc[127:0];
+//  always @(posedge clk) begin
+//    if (!rstn) begin
+//        add_rs1 <= 130'd0;
+//        add_rs2 <= 130'd0;
+//        o_alu_mul_ack <= 1'b0;
+//    end else if (i_alu_mul_req | o_alu_mul_ack) begin 
+//        add_rs1 <= add_ops[129:0];
+//        add_rs2 <= add_opc[129:0];
+//        o_alu_mul_ack <= o_alu_mul_ack ? 1'b0 : i_alu_mul_req;
+//    end
+//  end
+//
+//    assign mul_res = add_rs1[127:0] + add_rs2[127:0];
+//
+//`else
+//    assign mul_res =  rs1 * rs2;
+//    assign o_alu_mul_ack = 1'b1;
+//`endif                    
+
+    
+
+endmodule //zrv_muldiv

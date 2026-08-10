@@ -5,7 +5,9 @@ module rv64im_core_top # (
     parameter AXI_ADDR_WIDTH    = 32,
     parameter AXI_ID_WIDTH      = 4,
     parameter AXI_STRB_WIDTH    = AXI_DATA_WIDTH/8,
-    parameter AXI_USER_WIDTH    = 1
+    parameter AXI_USER_WIDTH    = 1,
+    parameter ICACHE_SIZE       = 8192,
+    parameter DCACHE_SIZE       = 8192
 )(
    // Advanced eXtensible Interface
     input                               axi_aw_ready_i,              
@@ -277,7 +279,7 @@ rv64im_core_clint u_rv64im_core_clint(
 );
 
 rv64im_core_dcache#(
-    .CACHE_SIZE     ( 8192 ),
+    .CACHE_SIZE     ( DCACHE_SIZE ),
     .LINE_SIZE      ( 256  ),
     .RW_DATA_WIDTH  ( 64   ),
     .RW_ADDR_WIDTH  ( 32   )
@@ -305,7 +307,7 @@ rv64im_core_dcache#(
 );
 
 rv64im_core_dcache#(
-    .CACHE_SIZE     ( 4096 ),
+    .CACHE_SIZE     ( ICACHE_SIZE ),
     .LINE_SIZE      ( 256  ),
     .RW_DATA_WIDTH  ( 64   ),
     .RW_ADDR_WIDTH  ( 32   )
