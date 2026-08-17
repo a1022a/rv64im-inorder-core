@@ -1,0 +1,5 @@
+workload,roi_cycles,i_access,i_miss,i_stall,d_access,d_miss,d_miss_rate_pct,d_refill_stall,d_writeback_stall,d_total_stall,writebacks
+FIB,11978,10994,19,159,2153,0,0,0,0,0,0
+Bubble,1860,1524,2,16,589,3,0.509338,NA,NA,26,0
+GOL128,590363,441853,8,64,158760,1016,0.639960,NA,NA,17280,1016
+GOL256,2394963,1792893,8,64,645160,4080,0.632371,32648,36720,69368,4080

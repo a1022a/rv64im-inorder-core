@@ -1,0 +1,12 @@
+gate,status,qualified_result
+cpu_tests,PASS,33/33
+cpu_tests_with_klib,PASS,33/33
+klib_unit_tests,PASS,8/8
+microbench,PASS,GOOD_TRAP
+am_hello,PASS,GOOD_TRAP
+am_rtc,PASS,GOOD_TRAP
+timer128_interrupt_mret,PASS,DIRECTED
+icache_64set,PASS,DIRECTED
+loaduse_p1_directed,PASS,FUNCTION_AND_MISS_FLUSH_SEMANTICS
+divider_drc1_directed,PASS,854_CASES_BIT_AND_CYCLE_EQUIVALENT
+final_regression,PASS,NO_FATAL_BAD_TRAP_ABORT_ASSERT_OR_NONCONVERGENCE
