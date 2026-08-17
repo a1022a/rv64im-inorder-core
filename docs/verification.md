@@ -1,45 +1,40 @@
 # Verification
 
-Phase 6 full regression command:
+## Functional gates
 
-```sh
-make regress > out/logs/phase6/make-regress.retry3.log 2>&1
-```
+The final integration reruns `make doctor`, `make build`, `make run TEST=dummy`,
+`make smoke`, `make regress`, the 64-set I-cache directed test, the load-use P1
+directed test, the DRC1 divider test, and the P1 performance runner.
 
-Exit status: `0`
+The retained full matrix comprises 33/33 CPU tests, 33/33 CPU tests linked with
+klib, 8/8 klib unit tests, MicroBench, AM hello, AM RTC, timer128 interrupt and
+`mret`, with no DiffTest fatal marker, bad trap, abort, assertion failure, or
+non-convergence marker. Machine-readable status is in
+`results/public/verification/summary.csv`.
 
-Retained summary:
+## Optimization-specific qualification
 
-- CPU tests: `33/33 PASS`
-- CPU-style tests linked with klib: `33/33 PASS`
-- Dedicated klib unit tests: `8/8 PASS`
-- MicroBench: `PASS`
-- AM hello: `PASS`
-- AM RTC: `PASS`
-- timer128 interrupt and mret: `PASS`
-- DiffTest fatal markers: `0`
-- bad trap: `0`
-- abort: `0`
-- assertion failure: `0`
-- non-convergence marker: `0`
+Load-use directed tests qualify accepted request, D-cache hit, formatted LSU
+response, dependent operands, and unchanged miss/flush behavior. Final measured
+cycles must be exactly FIB 11,978; Bubble 1,672; GOL128 463,868 with checksum
+3844; and GOL256 1,880,884 with checksum 15876.
 
-Primary logs:
+DRC1 uses 854 directed cases and compares P1/P2 result bits and acknowledgment
+cycles. Coverage includes all RV64 and W-form DIV/REM operations, divide by
+zero, signed overflow, randomized inputs, back-to-back requests, stall hold,
+and immediate dependent consumers.
 
-- `out/logs/phase6/make-regress.retry3.log`
-- `out/logs/regress/summary.txt`
-- Per-image logs under `out/logs/regress/`
+## Reference limitation
 
-The timer128 test is repository-local and built under `out/regress/` by
-`scripts/run_regress.sh`. External NEMU and am-kernels paths are read from local
-configuration; the regression does not modify those external projects.
+The patched NEMU reference can raise a host floating-point exception on
+selected divide-by-zero/signed-overflow cases and is unreliable as the oracle
+for selected signed W forms. Those cases use standalone expected-value checks,
+P1/P2 bit-and-cycle equivalence, and W-form self-checking integration. NEMU is
+not claimed to cover every divider corner case.
 
-The full regression matrix is maintained in `scripts/run_regress.sh`. The
-former placeholder `tests/manifests/regress.txt` is not part of the active
-`make regress` path.
+## ASIC evidence
 
-Directed machine interrupt checks are implemented by
-`scripts/run_intr_directed.sh`. They use a repository-local Verilator testbench
-for MTIE gating, MIE gating, MTIP readback, trap-entry `mstatus` updates,
-`mret`, and external/software/timer priority. The tests do not modify NEMU; the
-existing NEMU reference remains used by the ordinary CPU, klib, MicroBench, AM,
-and timer128 regression paths.
+Fresh P2R1 DC/PT analysis at a 2.0 ns target reports setup WNS +0.000097 ns,
+TNS 0, zero violations; hold WNS +0.037408 ns, TNS 0, zero violations. This is
+pre-layout synthesized front-end evidence only. See `docs/asic/` for method and
+scope.

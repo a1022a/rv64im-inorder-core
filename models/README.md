@@ -1,11 +1,13 @@
-# Models
+# Performance models
 
-This directory is reserved for future modeling collateral.
+These models preserve the measurement path that selected the final RTL change.
+They are analysis tools, not architectural simulators and not timing predictors.
 
-Current status:
+- `attribution/`: exclusive ROI and retirement attribution monitor
+- `branch/`: conditional-predictor replay, error morphology, capacity sweep
+- `cache/`: C0/C1 counter analysis and C2 exact tree-PLRU replay
+- `loaduse/`: dependency episodes and counterfactual cycle removal
+- `loaduse_p1/`: GOL harness used for measured P1 comparison
 
-- No performance counter model has been implemented.
-- No trace-driven, cache, branch-predictor, gem5, or design-space exploration
-  model has been implemented.
-- No model output is part of the Phase 7 release package beyond this handoff
-  placeholder.
+Raw traces, model output directories, and binaries are generated locally and
+ignored. Qualified compact results live in `results/public/`.

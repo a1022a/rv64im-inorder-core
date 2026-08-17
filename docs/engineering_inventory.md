@@ -5,10 +5,10 @@ engineering refactor.
 
 ## Environment
 
-- Repository workspace: `/home/icer/ysyx-workbench/rv64im-inorder-core`
+- Repository workspace: `${LOCAL_HOME}/ysyx-workbench/rv64im-inorder-core`
 - Hostname: `myliunx`
-- `pwd`: `/home/icer/ysyx-workbench/rv64im-inorder-core`
-- Git root: `/home/icer/ysyx-workbench/rv64im-inorder-core`
+- `pwd`: `${LOCAL_HOME}/ysyx-workbench/rv64im-inorder-core`
+- Git root: `${LOCAL_HOME}/ysyx-workbench/rv64im-inorder-core`
 - Current branch: `refactor/engineering-v1`
 - Git status before Phase 0 edits: clean
 - Functional baseline commit: `59bcac3 chore: import verified functional baseline`
@@ -40,7 +40,7 @@ Variables:
 - `TOP_CLASS_NAME=Vtop`
 - `INCLUDE_PATH=./vsrc`
 - `OBJ_DIR=build`
-- `LIBS=/home/icer/ysyx-workbench/nemu/build`
+- `LIBS=${LOCAL_HOME}/ysyx-workbench/nemu/build`
 - `VSRCS=$(shell find ./vsrc -name "*.*v")`
 - `CSRCS=$(shell find ./csrc -name "*.c" -or -name "*.cc" -or -name "*.cpp")`
 - `IMG?=`
@@ -212,8 +212,8 @@ DPI functions:
 
 DiffTest:
 
-- Legacy Makefile default reference model: `/home/icer/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so`.
-- Verified baseline reference model: `/home/icer/ysyx-workbench/nemu/build/riscv64-nemu-ref-patched.so`, SHA256 `202f091d5721e0b567be3246c7bd9f8f234c34f685bbc8b01af003f5493ce0dc`.
+- Legacy Makefile default reference model: `${LOCAL_HOME}/ysyx-workbench/nemu/build/riscv64-nemu-interpreter-so`.
+- Verified baseline reference model: `${LOCAL_HOME}/ysyx-workbench/nemu/build/riscv64-nemu-ref-patched.so`, SHA256 `202f091d5721e0b567be3246c7bd9f8f234c34f685bbc8b01af003f5493ce0dc`.
 - These two NEMU reference paths must not be treated as equivalent; Phase 1 should make the verified path explicit through machine-local configuration.
 - `csrc/difftest.cpp` resolves `difftest_memcpy`, `difftest_regcpy`, `difftest_exec`, `difftest_raise_intr`, and `difftest_init` with `dlsym`.
 - `exec_once()` commits one NEMU step when `CONFIG_DIFFTEST` and `wb_num != 0`.

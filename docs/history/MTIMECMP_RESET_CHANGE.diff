@@ -1,5 +1,5 @@
---- /home/icer/zrv_milestones/zrv_final_regression_20260803_145427/source_snapshot/npc_source/vsrc/bus/zrv_clint.sv	2026-08-02 17:42:55.186538373 +0800
-+++ /home/icer/ysyx-workbench/npc_zrv_v1_2_cleanup_try1/vsrc/bus/zrv_clint.sv	2026-08-03 16:57:43.743415385 +0800
+--- ${LOCAL_HOME}/zrv_milestones/zrv_final_regression_20260803_145427/source_snapshot/npc_source/vsrc/bus/zrv_clint.sv	2026-08-02 17:42:55.186538373 +0800
++++ ${LOCAL_HOME}/ysyx-workbench/npc_zrv_v1_2_cleanup_try1/vsrc/bus/zrv_clint.sv	2026-08-03 16:57:43.743415385 +0800
 @@ -37,7 +37,7 @@
      zrv_reg #(`ZRV_DATA_WIDTH,0) reg_mtime(clk, !rstn, mtime_next, mtime, 1'b1);
  
