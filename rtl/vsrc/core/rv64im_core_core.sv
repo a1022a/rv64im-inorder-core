@@ -17,6 +17,7 @@ module rv64im_core_core (
     output wire [`RV64IM_CORE_DATA_WIDTH-1:0] o_lsu_wdata,
     output wire [ 7:0] o_lsu_wmask,
     input  wire i_lsu_req_rdy,
+    input  wire i_lsu_req_hit,
 
     input  wire i_lsu_rsp_vld,
     input  wire [`RV64IM_CORE_DATA_WIDTH-1:0] i_lsu_rdata,
@@ -59,8 +60,10 @@ module rv64im_core_core (
     wire mem_idu_mem_rd_wen;
     wire [4:0] mem_idu_mem_rd_index;
     wire [`RV64IM_CORE_DATA_WIDTH-1:0] mem_idu_mem_rd_data;
+    wire mem_exu_load_bypass_vld;
     wire idu_exu_id_flush_ex;
-    wire idu_pipe_stall;
+    wire idu_load_use_hazard;
+    wire idu_pipe_stall = idu_load_use_hazard & !i_lsu_req_hit;
 
     wire [`RV64IM_CORE_INST_WIDTH-1:0] idu_exu_inst;
     wire [`RV64IM_CORE_DATA_WIDTH-1:0] idu_exu_pc;
@@ -160,7 +163,7 @@ rv64im_core_idu u_rv64im_core_idu(
     .i_idu_mem_rd_index (mem_idu_mem_rd_index ),
     .i_idu_mem_rd_data  (mem_idu_mem_rd_data  ),
 
-    .o_idu_id_flush_ex  (idu_pipe_stall       ),
+    .o_idu_id_flush_ex  (idu_load_use_hazard  ),
     .o_idu_inst         (idu_exu_inst         ),
     .o_idu_pc           (idu_exu_pc           ),
     .o_idu_rs1_data     (idu_exu_rs1_data     ),
@@ -188,6 +191,9 @@ rv64im_core_exu u_rv64im_core_exu(
     .i_exu_rd_index        (idu_exu_rd_index        ),
     .i_exu_type_info       (idu_exu_type_info       ),
     .i_exu_op_info         (idu_exu_op_info         ),
+    .i_exu_load_bypass_vld (mem_exu_load_bypass_vld),
+    .i_exu_load_bypass_rd  (mem_idu_mem_rd_index    ),
+    .i_exu_load_bypass_data(mem_idu_mem_rd_data     ),
 
     .i_exu_flush           (pipe_exu_flush           ),
     .i_exu_stall           (pipe_exu_stall           ),
@@ -260,6 +266,7 @@ rv64im_core_lsu u_rv64im_core_lsu(
     .o_lsu_idu_wen      (mem_idu_mem_rd_wen      ),
     .o_lsu_idu_index    (mem_idu_mem_rd_index    ),
     .o_lsu_idu_data     (mem_idu_mem_rd_data     ),
+    .o_lsu_load_bypass_vld (mem_exu_load_bypass_vld),
 
     .o_lsu_req_vld     ( o_lsu_req_vld     ),
     .o_lsu_wen          ( o_lsu_wen          ),

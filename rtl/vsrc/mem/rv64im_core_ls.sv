@@ -30,6 +30,7 @@ module rv64im_core_ls (
     output wire o_ls_idu_wen, 
     output wire [4:0] o_ls_idu_index,   
     output wire [`RV64IM_CORE_DATA_WIDTH-1:0] o_ls_idu_data,
+    output wire o_ls_load_bypass_vld,
 
     //to bus
     output wire o_ls_req_vld,
@@ -180,6 +181,8 @@ module rv64im_core_ls (
     assign o_ls_idu_wen   = i_ls_rd_wen;
     assign o_ls_idu_index = i_ls_rd_index;
     assign o_ls_idu_data  = i_ls_mem_req_ff ? memtord_data : alutord_data;
+    assign o_ls_load_bypass_vld = i_ls_mem_req_ff & i_ls_load_ff
+                                & (i_ls_rsp_vld | data_shake_done);
 
   //to bus
   /*问题：访存完成后，流水线还在stall转态应如何；访存接口时序问题；*/

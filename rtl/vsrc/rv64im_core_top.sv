@@ -60,6 +60,34 @@ module rv64im_core_top # (
     input  [AXI_ID_WIDTH-1:0]           axi_r_id_i,
     input  [AXI_USER_WIDTH-1:0]         axi_r_user_i,
 
+`ifdef PERFORMANCE_MODEL
+    output wire perf_icache_access_event,
+    output wire perf_icache_hit_event,
+    output wire perf_icache_miss_event,
+    output wire perf_icache_miss_stall,
+    output wire perf_icache_total_stall,
+    output wire perf_dcache_access_event,
+    output wire perf_dcache_load_access_event,
+    output wire perf_dcache_store_access_event,
+    output wire perf_dcache_hit_event,
+    output wire perf_dcache_miss_event,
+    output wire perf_dcache_dirty_eviction_event,
+    output wire perf_dcache_miss_stall,
+    output wire perf_dcache_writeback_stall,
+    output wire perf_dcache_total_stall,
+    output wire [31:0] perf_dcache_access_address,
+    output wire [7:0] perf_dcache_access_wmask,
+    output wire perf_branch_recovery,
+    output wire perf_dependency_stall,
+    output wire perf_divider_stall,
+    output wire [63:0] perf_exu_pc,
+    output wire [31:0] perf_exu_inst,
+    output wire perf_exu_active,
+    output wire [63:0] perf_dependency_consumer_pc,
+    output wire [31:0] perf_dependency_consumer_inst,
+    output wire [4:0] perf_dependency_producer_rd,
+    output wire [63:0] perf_dependency_producer_address,
+`endif
     input wire clk,
     input wire rstn
 
@@ -81,6 +109,7 @@ module rv64im_core_top # (
      wire [64-1:0] lsu_addr    ; 
      wire [RW_DATA_WIDTH-1:0] lsu_wdata   ; 
      wire [7:0] lsu_wmask   ;
+    wire lsu_dcache_req_hit;
     wire lsu_rsp_vld;
     wire lsu_rsp_rdy;
      wire [RW_DATA_WIDTH-1:0] lsu_rdata   ; 
@@ -249,6 +278,7 @@ rv64im_core_core u_rv64im_core_core(
     .o_lsu_wdata       ( lsu_wdata       ),
     .o_lsu_wmask       ( lsu_wmask       ),
     .i_lsu_req_rdy    ( lsu_req_rdy    ),
+    .i_lsu_req_hit    ( cs[0] & lsu_dcache_req_hit ),
     .i_lsu_rsp_vld    ( lsu_rsp_vld    ),
     .i_lsu_rdata       ( lsu_rdata       ),
     .o_lsu_rsp_rdy    ( lsu_rsp_rdy    ),
@@ -290,6 +320,7 @@ rv64im_core_dcache#(
     .i_mem_wdata    ( s_wdata[0]    ),
     .i_mem_wmask    ( s_wmask[0]    ),
     .o_mem_req_rdy ( s_req_rdy[0] ),
+    .o_mem_req_hit ( lsu_dcache_req_hit ),
     .i_mem_rsp_rdy ( s_rsp_rdy[0] ),
     .o_mem_rdata    ( s_rdata[0]    ),
     .o_mem_rsp_vld ( s_rsp_vld[0] ),
@@ -318,6 +349,7 @@ rv64im_core_dcache#(
     .i_mem_wmask    ( 8'b0  ),
     .i_mem_addr     ( ifu_addr[31:0]),
     .o_mem_req_rdy ( ifu_req_rdy ),
+    .o_mem_req_hit ( ),
     .i_mem_rsp_rdy ( ifu_rsp_rdy ),
     .o_mem_rdata    ( ifu_rdata    ),
     .o_mem_rsp_vld ( ifu_rsp_vld ),
@@ -333,6 +365,46 @@ rv64im_core_dcache#(
     .clk            ( clk            ),
     .rstn           ( rstn           )
 );
+
+`ifdef PERFORMANCE_MODEL
+    assign perf_icache_access_event = u_rv64im_core_icache.req_vld;
+    assign perf_icache_hit_event = u_rv64im_core_icache.req_hit;
+    assign perf_icache_miss_event = u_rv64im_core_icache.req_miss;
+    assign perf_icache_miss_stall = u_rv64im_core_icache.state_is_rbus;
+    assign perf_icache_total_stall = u_rv64im_core_icache.state_is_wbus |
+                                     u_rv64im_core_icache.state_is_rbus |
+                                     u_rv64im_core_icache.stall_c1;
+    assign perf_dcache_access_event = u_rv64im_core_dcache.req_vld;
+    assign perf_dcache_load_access_event = u_rv64im_core_dcache.req_vld &
+                                           ~u_rv64im_core_dcache.i_mem_wen;
+    assign perf_dcache_store_access_event = u_rv64im_core_dcache.req_vld &
+                                            u_rv64im_core_dcache.i_mem_wen;
+    assign perf_dcache_hit_event = u_rv64im_core_dcache.req_hit;
+    assign perf_dcache_miss_event = u_rv64im_core_dcache.req_miss;
+    assign perf_dcache_dirty_eviction_event = u_rv64im_core_dcache.wbus_en;
+    assign perf_dcache_miss_stall = u_rv64im_core_dcache.state_is_rbus;
+    assign perf_dcache_writeback_stall = u_rv64im_core_dcache.state_is_wbus;
+    assign perf_dcache_total_stall = u_rv64im_core_dcache.state_is_wbus |
+                                     u_rv64im_core_dcache.state_is_rbus |
+                                     u_rv64im_core_dcache.stall_c1;
+    assign perf_dcache_access_address = u_rv64im_core_dcache.i_mem_addr;
+    assign perf_dcache_access_wmask = u_rv64im_core_dcache.i_mem_wmask;
+    assign perf_branch_recovery = u_rv64im_core_core.exu_pipe_alu_flush &
+                                  ~u_rv64im_core_core.mem_pipe_stall;
+    assign perf_dependency_stall = u_rv64im_core_core.idu_pipe_stall;
+    assign perf_divider_stall =
+        u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.div_op &
+        ~u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.div_ack;
+    assign perf_exu_pc =
+        u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.i_alu_pc;
+    assign perf_exu_inst =
+        u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.i_alu_inst;
+    assign perf_exu_active = ~u_rv64im_core_core.pipe_exu_stall;
+    assign perf_dependency_consumer_pc = u_rv64im_core_core.idu_exu_pc;
+    assign perf_dependency_consumer_inst = u_rv64im_core_core.idu_exu_inst;
+    assign perf_dependency_producer_rd = u_rv64im_core_core.exu_idu_exu_rd_index;
+    assign perf_dependency_producer_address = u_rv64im_core_core.exu_mem_addr;
+`endif
 
 
 rv64im_core_axi_rw#(

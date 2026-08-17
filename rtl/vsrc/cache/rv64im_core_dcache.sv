@@ -13,6 +13,7 @@ module rv64im_core_dcache #(
     input  wire [RW_DATA_WIDTH-1:0] i_mem_wdata,
     input  wire [7:0] i_mem_wmask,
     output wire o_mem_req_rdy,
+    output wire o_mem_req_hit,
 
     input  wire i_mem_rsp_rdy,
     output wire [RW_DATA_WIDTH-1:0] o_mem_rdata,
@@ -117,6 +118,7 @@ module rv64im_core_dcache #(
     assign way_hit[3:0] = {(tag_arry3[idx]==tag) , (tag_arry2[idx]==tag) , (tag_arry1[idx]==tag), (tag_arry0[idx]==tag)} & way_vld[3:0];
     assign req_hit  = req_vld & (|way_hit[3:0]);
     assign req_miss = req_vld & ~(|way_hit[3:0]);
+    assign o_mem_req_hit = o_mem_req_rdy & (|way_hit[3:0]);
 //gen vic_dry
     assign vic_dry = |(way_vic[3:0] & way_dry[3:0] & way_vld[3:0]);
     assign way_vld[3:0] = {sign_arry3[idx][0],sign_arry2[idx][0],sign_arry1[idx][0],sign_arry0[idx][0]};

@@ -82,6 +82,7 @@ rv64im_core_id u_rv64im_core_id(
 
 
 rv64im_core_regfile u_rv64im_core_regfile(
+    .i_rf_inst      (reg_id_inst      ),
     .i_rf_wb_stall  (i_idu_wb_stall  ),
     .i_rf_rd_data   (i_idu_rd_data   ),
     .i_rf_rd_index  (i_idu_rd_index  ),
@@ -105,4 +106,3 @@ rv64im_core_regfile u_rv64im_core_regfile(
 );
 
 endmodule //idu
-

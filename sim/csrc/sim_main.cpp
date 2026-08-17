@@ -10,17 +10,40 @@
 #include <assert.h>
 #include "globalvar.h"
 #include "difftest.h"
+#ifdef PERFORMANCE_MODEL
+#include "dependency_observer.h"
+#endif
 
 #ifdef ICACHE_64SET_MONITOR
 #include "Vtop_rv64im_core_dcache__C2000.h"
 #endif
-
 
 vluint64_t main_time = 0;           // 仿真时间戳
 const vluint64_t sim_time = 100;   // 最大仿真时间戳
 
 VerilatedVcdC* tfp;
 Vtop* top;
+
+#ifdef LOADUSE_P1_MONITOR
+static uint64_t loaduse_p1_hit_bypass_events;
+static uint64_t loaduse_p1_miss_hazard_events;
+static uint64_t loaduse_p1_operand_bypass_events;
+
+static void loaduse_p1_monitor_sample() {
+  loaduse_p1_hit_bypass_events += top->loaduse_p1_hit_bypass_event;
+  loaduse_p1_miss_hazard_events += top->loaduse_p1_miss_hazard_event;
+  loaduse_p1_operand_bypass_events += top->loaduse_p1_operand_bypass_event;
+}
+
+int loaduse_p1_monitor_finalize() {
+  printf("LOADUSE_P1_HIT_BYPASS_EVENTS=%lu\n", loaduse_p1_hit_bypass_events);
+  printf("LOADUSE_P1_MISS_HAZARD_EVENTS=%lu\n", loaduse_p1_miss_hazard_events);
+  printf("LOADUSE_P1_OPERAND_BYPASS_EVENTS=%lu\n", loaduse_p1_operand_bypass_events);
+  return loaduse_p1_hit_bypass_events > 0 &&
+         loaduse_p1_miss_hazard_events > 0 &&
+         loaduse_p1_operand_bypass_events == loaduse_p1_hit_bypass_events ? 0 : 1;
+}
+#endif
 
 #ifdef ICACHE_64SET_MONITOR
 void set_cpu_state(int n);
@@ -130,6 +153,12 @@ extern "C" void set_gpr_ptr(const svOpenArrayHandle h) {
 
 void single_cycle() {
 	top->clk = 0; top->eval();
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_cycle();
+#endif
+	#ifdef LOADUSE_P1_MONITOR
+	  loaduse_p1_monitor_sample();
+	#endif
 	#ifdef ICACHE_64SET_MONITOR
 	  icache_64set_monitor_sample();
 	#endif
@@ -137,6 +166,24 @@ void single_cycle() {
     main_time++;
 
 	top->clk = 1; top->eval();
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_sample({
+      static_cast<bool>(top->perf_dependency_stall),
+      static_cast<bool>(top->perf_dcache_total_stall),
+      static_cast<bool>(top->perf_divider_stall),
+      static_cast<bool>(top->perf_branch_recovery),
+      static_cast<bool>(top->perf_dcache_load_access_event),
+      static_cast<bool>(top->perf_dcache_hit_event),
+      static_cast<bool>(top->perf_dcache_miss_event),
+      top->perf_dcache_access_address,
+      top->perf_dependency_consumer_pc,
+      top->perf_dependency_consumer_inst,
+      top->perf_dependency_producer_pc,
+      top->perf_dependency_producer_inst,
+      top->perf_dependency_producer_rd,
+      top->perf_dependency_producer_address,
+  });
+#endif
 	#ifdef ICACHE_64SET_MONITOR
 	  icache_64set_monitor_sample();
 	#endif
@@ -158,6 +205,9 @@ void init_sim(int argc, char** argv){
 	//为对象分配空间
 	if(CONFIG_WAVE){tfp = new VerilatedVcdC;}
   top = new Vtop;	
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_init_from_env();
+#endif
   if(CONFIG_WAVE){
     top->trace(tfp, 99);   
     tfp->open("wave.vcd"); //打开vcd  
@@ -168,7 +218,9 @@ void init_sim(int argc, char** argv){
 }
 
 void end_sim(){
+#ifndef PERFORMANCE_MODEL
 	delete top;
+#endif
 	if(CONFIG_WAVE){delete tfp;}
 }
 
@@ -216,6 +268,9 @@ static void ftrace(uint32_t inst_now, uint64_t pc_now, uint64_t pc_next){
 
 static int wb_num = 0;
 void exec_once(){
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_update_roi(top->wb_sign, top->wb_pc);
+#endif
   if(top->wb_sign){
     wb_pc_now   = top->wb_pc;
     if (CONFIG_DIFFTEST && wb_num != 0) {
