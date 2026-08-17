@@ -36,8 +36,8 @@ end
   assign o2 = {tmp_co[BITS-2:0],1'b0};
 endgenerate
 
-  assign tmp_i1[0] = 1'b0;
-  assign tmp_i2[0] = tmp_o2[i];
+  assign tmp_i1[0] = tmp_o1[0];
+  assign tmp_i2[0] = 1'b0;
 generate for(genvar i=1;i<BITS;i=i+1) begin : u_tmp_connect
   assign tmp_i1[i] = tmp_o1[i]; 
   assign tmp_i2[i] = tmp_o2[i-1]; 

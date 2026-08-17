@@ -11,8 +11,31 @@ module rv64im_core_sim_top
     output wire [63:0] brn_num,
     output wire [63:0] bflush_num,
 
+`ifdef PERFORMANCE_MODEL
+    output wire perf_dcache_access_event,
+    output wire perf_dcache_load_access_event,
+    output wire perf_dcache_hit_event,
+    output wire perf_dcache_miss_event,
+    output wire perf_dcache_total_stall,
+    output wire [31:0] perf_dcache_access_address,
+    output wire perf_branch_recovery,
+    output wire perf_dependency_stall,
+    output wire perf_divider_stall,
+    output wire [63:0] perf_dependency_consumer_pc,
+    output wire [31:0] perf_dependency_consumer_inst,
+    output wire [63:0] perf_dependency_producer_pc,
+    output wire [31:0] perf_dependency_producer_inst,
+    output wire [4:0] perf_dependency_producer_rd,
+    output wire [63:0] perf_dependency_producer_address,
+`endif
     output wire [63:0] st_addr,
     output wire [63:0] st_data,
+
+`ifdef LOADUSE_P1_MONITOR
+    output wire loaduse_p1_hit_bypass_event,
+    output wire loaduse_p1_miss_hazard_event,
+    output wire loaduse_p1_operand_bypass_event,
+`endif
 
     input  wire clk,
     input  wire rstn    
@@ -20,6 +43,43 @@ module rv64im_core_sim_top
 
 wire bx_wen     = u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.bjp_req;
 wire bflush_wen = u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.o_alu_flush;
+`ifdef PERFORMANCE_MODEL
+assign perf_dcache_access_event = u_rv64im_core_top.u_rv64im_core_dcache.req_vld;
+assign perf_dcache_load_access_event = u_rv64im_core_top.u_rv64im_core_dcache.req_vld &
+                                       ~u_rv64im_core_top.u_rv64im_core_dcache.i_mem_wen;
+assign perf_dcache_hit_event = u_rv64im_core_top.u_rv64im_core_dcache.req_hit;
+assign perf_dcache_miss_event = u_rv64im_core_top.u_rv64im_core_dcache.req_miss;
+assign perf_dcache_total_stall = u_rv64im_core_top.u_rv64im_core_dcache.state_is_wbus |
+                                 u_rv64im_core_top.u_rv64im_core_dcache.state_is_rbus |
+                                 u_rv64im_core_top.u_rv64im_core_dcache.stall_c1;
+assign perf_dcache_access_address = u_rv64im_core_top.u_rv64im_core_dcache.i_mem_addr;
+assign perf_branch_recovery = u_rv64im_core_top.u_rv64im_core_core.exu_pipe_alu_flush &
+                              ~u_rv64im_core_top.u_rv64im_core_core.mem_pipe_stall;
+assign perf_dependency_stall = u_rv64im_core_top.u_rv64im_core_core.idu_pipe_stall;
+assign perf_divider_stall =
+    u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.div_op &
+    ~u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.div_ack;
+assign perf_dependency_consumer_pc = u_rv64im_core_top.u_rv64im_core_core.idu_exu_pc;
+assign perf_dependency_consumer_inst = u_rv64im_core_top.u_rv64im_core_core.idu_exu_inst;
+assign perf_dependency_producer_pc =
+    u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.i_alu_pc;
+assign perf_dependency_producer_inst =
+    u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.u_rv64im_core_alu.i_alu_inst;
+assign perf_dependency_producer_rd =
+    u_rv64im_core_top.u_rv64im_core_core.exu_idu_exu_rd_index;
+assign perf_dependency_producer_address = u_rv64im_core_top.u_rv64im_core_core.exu_mem_addr;
+`endif
+`ifdef LOADUSE_P1_MONITOR
+assign loaduse_p1_hit_bypass_event =
+    u_rv64im_core_top.u_rv64im_core_core.idu_load_use_hazard &
+    u_rv64im_core_top.u_rv64im_core_core.i_lsu_req_hit;
+assign loaduse_p1_miss_hazard_event =
+    u_rv64im_core_top.u_rv64im_core_core.idu_load_use_hazard &
+    ~u_rv64im_core_top.u_rv64im_core_core.i_lsu_req_hit;
+assign loaduse_p1_operand_bypass_event =
+    u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.bypass_rs1 |
+    u_rv64im_core_top.u_rv64im_core_core.u_rv64im_core_exu.bypass_rs2;
+`endif
 rv64im_core_reg #(.WIDTH(64), .RESET_VAL(64'd0)) u_bx     (.clk(clk), .rst(~rstn), .din(brn_num+1'b1),    .dout(brn_num),    .wen(bx_wen));
 rv64im_core_reg #(.WIDTH(64), .RESET_VAL(64'd0)) u_bflush (.clk(clk), .rst(~rstn), .din(bflush_num+1'b1), .dout(bflush_num), .wen(bflush_wen));
 
@@ -256,4 +316,3 @@ rv64im_core_top#(
 );
 
 endmodule
-

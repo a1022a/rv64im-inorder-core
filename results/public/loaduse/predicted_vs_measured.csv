@@ -1,0 +1,5 @@
+workload,baseline_cycles,predicted_one_cycle_cycles,predicted_speedup,measured_p1_cycles,measured_speedup,cycle_error
+FIB,11978,11978,1.000000,11978,1.000000,0
+Bubble,1860,1672,1.112440,1672,1.112440,0
+GOL128,590363,463867,1.272699,463868,1.272696,1
+GOL256,2394963,1880883,1.273318,1880884,1.273317759,1

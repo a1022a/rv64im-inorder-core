@@ -1,0 +1,35 @@
+Project:
+  rv64im-inorder-core
+
+Validated at:
+  2026-08-03T23:04:20+08:00
+
+Baseline source:
+  ${LOCAL_HOME}/zrv_milestones/zrv_cleanup_final_20260803_174843/source
+
+Build:
+  command: make comp -j1
+  exit_status: 0
+  executable: build/Vtop
+  Vtop SHA256:
+    16b2f3b7d013e9eeb6fe38c292b9ee2132c91a5decb6465a420a5284b08538cf
+
+Reference model:
+  ${LOCAL_HOME}/ysyx-workbench/nemu/build/riscv64-nemu-ref-patched.so
+  SHA256:
+    202f091d5721e0b567be3246c7bd9f8f234c34f685bbc8b01af003f5493ce0dc
+
+Smoke test:
+  image:
+    ${LOCAL_HOME}/ysyx-workbench/am-kernels/tests/cpu-tests/build/dummy-riscv64-npc.bin
+  exit_status: 0
+  good_trap: 1
+  bad_marker: 0
+  result: PASS
+
+Known baseline build warning:
+  The legacy Makefile invokes Git against '..'.
+  In this independent repository that produces an ignored Git error,
+  but the Verilator build still completes successfully.
+  This must be corrected during build-system engineering, not in the
+  functional baseline.

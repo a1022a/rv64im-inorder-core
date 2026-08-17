@@ -1,0 +1,3 @@
+# ASIC characterization methodology
+
+The experiments use a single functional clock, a slow/max corner for setup, and a fast/min corner for internal hold. The design contains 32 linked 64x64 synchronous SRAM macros (16 I-cache and 16 D-cache); SRAM timing arcs are active in STA. AXI maximum input/output budgets are 25% of the clock period, input drive and output load use representative library-derived models, and clock uncertainty is zero for this characterization study. Reset is asynchronous active-low. No generated clock, gated-clock, CDC, P&R, CTS, extracted-parasitic, interface-min-delay, power-closure, or signoff claim is made.

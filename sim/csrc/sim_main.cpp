@@ -10,13 +10,93 @@
 #include <assert.h>
 #include "globalvar.h"
 #include "difftest.h"
+#ifdef PERFORMANCE_MODEL
+#include "dependency_observer.h"
+#endif
 
+#ifdef ICACHE_64SET_MONITOR
+#include "Vtop_rv64im_core_dcache__C2000.h"
+#endif
 
 vluint64_t main_time = 0;           // 仿真时间戳
 const vluint64_t sim_time = 100;   // 最大仿真时间戳
 
 VerilatedVcdC* tfp;
 Vtop* top;
+
+#ifdef LOADUSE_P1_MONITOR
+static uint64_t loaduse_p1_hit_bypass_events;
+static uint64_t loaduse_p1_miss_hazard_events;
+static uint64_t loaduse_p1_operand_bypass_events;
+
+static void loaduse_p1_monitor_sample() {
+  loaduse_p1_hit_bypass_events += top->loaduse_p1_hit_bypass_event;
+  loaduse_p1_miss_hazard_events += top->loaduse_p1_miss_hazard_event;
+  loaduse_p1_operand_bypass_events += top->loaduse_p1_operand_bypass_event;
+}
+
+int loaduse_p1_monitor_finalize() {
+  printf("LOADUSE_P1_HIT_BYPASS_EVENTS=%lu\n", loaduse_p1_hit_bypass_events);
+  printf("LOADUSE_P1_MISS_HAZARD_EVENTS=%lu\n", loaduse_p1_miss_hazard_events);
+  printf("LOADUSE_P1_OPERAND_BYPASS_EVENTS=%lu\n", loaduse_p1_operand_bypass_events);
+  return loaduse_p1_hit_bypass_events > 0 &&
+         loaduse_p1_miss_hazard_events > 0 &&
+         loaduse_p1_operand_bypass_events == loaduse_p1_hit_bypass_events ? 0 : 1;
+}
+#endif
+
+#ifdef ICACHE_64SET_MONITOR
+void set_cpu_state(int n);
+
+static const uint32_t icache_64set_lines[] = {
+  0x80000400, 0x80000800, 0x80000c00, 0x80001000, 0x80001400,
+};
+static bool icache_64set_executed[5] = {};
+
+static void icache_64set_monitor_sample() {
+  if (!top->wb_sign) return;
+  const uint32_t line_addr = top->wb_pc & ~0x1fU;
+  for (unsigned int line = 0; line < 5; ++line) {
+    if (line_addr == icache_64set_lines[line]) icache_64set_executed[line] = true;
+  }
+}
+
+int icache_64set_monitor_finalize() {
+  Vtop_rv64im_core_dcache__C2000* icache =
+    top->__PVT__rv64im_core_sim_top__DOT__u_rv64im_core_top__DOT__u_rv64im_core_icache;
+  unsigned int executed_count = 0;
+  unsigned int resident_count = 0;
+  for (unsigned int line = 0; line < 5; ++line) {
+    const uint32_t line_addr = icache_64set_lines[line];
+    const unsigned int index6 = (line_addr >> 5) & 0x3fU;
+    const unsigned int index5 = (line_addr >> 5) & 0x1fU;
+    const uint32_t tag = line_addr >> 11;
+    int resident_way = -1;
+    const uint32_t tags[] = {
+      icache->__PVT__tag_arry0[index6], icache->__PVT__tag_arry1[index6],
+      icache->__PVT__tag_arry2[index6], icache->__PVT__tag_arry3[index6],
+    };
+    const uint8_t valid[] = {
+      icache->__PVT__sign_arry0[index6], icache->__PVT__sign_arry1[index6],
+      icache->__PVT__sign_arry2[index6], icache->__PVT__sign_arry3[index6],
+    };
+    for (unsigned int way = 0; way < 4; ++way) {
+      if ((valid[way] & 1U) && tags[way] == tag) resident_way = way;
+    }
+    executed_count += icache_64set_executed[line];
+    resident_count += resident_way >= 0;
+    printf("ICACHE64SET line addr=0x%08x executed=%u index6=%u index5=%u tag=0x%x resident_way=%d\n",
+           line_addr, icache_64set_executed[line], index6, index5, tag, resident_way);
+  }
+  if (executed_count != 5 || resident_count != 5) {
+    printf("ICACHE64SET monitor failure: executed=%u/5 resident=%u/5\n",
+           executed_count, resident_count);
+    return 1;
+  }
+  printf("ICACHE64SET_MONITOR: PASS target_lines=5 dynamic_way_residency=3+2 old_set32_distribution=5\n");
+  return 0;
+}
+#endif
 
 uint8_t cpu_state = NPC_RUNNING;
 void set_cpu_state(int n){
@@ -73,10 +153,40 @@ extern "C" void set_gpr_ptr(const svOpenArrayHandle h) {
 
 void single_cycle() {
 	top->clk = 0; top->eval();
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_cycle();
+#endif
+	#ifdef LOADUSE_P1_MONITOR
+	  loaduse_p1_monitor_sample();
+	#endif
+	#ifdef ICACHE_64SET_MONITOR
+	  icache_64set_monitor_sample();
+	#endif
 	  if(CONFIG_WAVE){tfp->dump(main_time);}   //波形文件写入步进
     main_time++;
 
 	top->clk = 1; top->eval();
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_sample({
+      static_cast<bool>(top->perf_dependency_stall),
+      static_cast<bool>(top->perf_dcache_total_stall),
+      static_cast<bool>(top->perf_divider_stall),
+      static_cast<bool>(top->perf_branch_recovery),
+      static_cast<bool>(top->perf_dcache_load_access_event),
+      static_cast<bool>(top->perf_dcache_hit_event),
+      static_cast<bool>(top->perf_dcache_miss_event),
+      top->perf_dcache_access_address,
+      top->perf_dependency_consumer_pc,
+      top->perf_dependency_consumer_inst,
+      top->perf_dependency_producer_pc,
+      top->perf_dependency_producer_inst,
+      top->perf_dependency_producer_rd,
+      top->perf_dependency_producer_address,
+  });
+#endif
+	#ifdef ICACHE_64SET_MONITOR
+	  icache_64set_monitor_sample();
+	#endif
 	  if(CONFIG_WAVE){tfp->dump(main_time);}   //波形文件写入步进
     main_time++;
 }
@@ -95,6 +205,9 @@ void init_sim(int argc, char** argv){
 	//为对象分配空间
 	if(CONFIG_WAVE){tfp = new VerilatedVcdC;}
   top = new Vtop;	
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_init_from_env();
+#endif
   if(CONFIG_WAVE){
     top->trace(tfp, 99);   
     tfp->open("wave.vcd"); //打开vcd  
@@ -105,7 +218,9 @@ void init_sim(int argc, char** argv){
 }
 
 void end_sim(){
+#ifndef PERFORMANCE_MODEL
 	delete top;
+#endif
 	if(CONFIG_WAVE){delete tfp;}
 }
 
@@ -153,6 +268,9 @@ static void ftrace(uint32_t inst_now, uint64_t pc_now, uint64_t pc_next){
 
 static int wb_num = 0;
 void exec_once(){
+#ifdef PERFORMANCE_MODEL
+  dependency_observer_update_roi(top->wb_sign, top->wb_pc);
+#endif
   if(top->wb_sign){
     wb_pc_now   = top->wb_pc;
     if (CONFIG_DIFFTEST && wb_num != 0) {

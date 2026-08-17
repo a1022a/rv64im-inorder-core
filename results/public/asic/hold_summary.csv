@@ -1,0 +1,4 @@
+design,corner,status,wns_ns,tns_ns,violations,sram_violations,unconstrained_internal_endpoints,scope
+BASELINE,fast_min,PASS,0.043495,0,0,0,0,PRE_LAYOUT_INTERNAL_HOLD
+P1,fast_min,PASS,0.037408,0,0,0,0,PRE_LAYOUT_INTERNAL_HOLD
+P2R1,fast_min,PASS,0.037408,0,0,0,0,PRE_LAYOUT_INTERNAL_HOLD

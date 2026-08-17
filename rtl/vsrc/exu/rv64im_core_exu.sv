@@ -11,6 +11,9 @@ module rv64im_core_exu (
     input  wire [4:0] i_exu_rd_index,
     input  wire [`RV64IM_CORE_TYPE_INFO-1:0] i_exu_type_info,
     input  wire [`RV64IM_CORE_OP_INFO-1:0] i_exu_op_info,
+    input  wire i_exu_load_bypass_vld,
+    input  wire [4:0] i_exu_load_bypass_rd,
+    input  wire [`RV64IM_CORE_DATA_WIDTH-1:0] i_exu_load_bypass_data,
 
     input wire i_exu_flush,              // 流水线冲刷标志
     input wire i_exu_stall,              // 流水线等待标志
@@ -71,6 +74,25 @@ module rv64im_core_exu (
     wire [`RV64IM_CORE_TYPE_INFO-1:0] reg_alu_type_info;
     wire [`RV64IM_CORE_OP_INFO-1:0] reg_alu_op_info;
 
+    wire [6:0] bypass_opcode = reg_alu_inst[6:0];
+    wire [2:0] bypass_funct3 = reg_alu_inst[14:12];
+    wire bypass_use_rs1 = (bypass_opcode == 7'b0110011) | (bypass_opcode == 7'b0111011)
+                        | (bypass_opcode == 7'b0100011) | (bypass_opcode == 7'b1100011)
+                        | (bypass_opcode == 7'b0000011) | (bypass_opcode == 7'b0010011)
+                        | (bypass_opcode == 7'b0011011) | (bypass_opcode == 7'b1100111)
+                        | ((bypass_opcode == 7'b1110011) & (bypass_funct3 >= 3'b001)
+                                                           & (bypass_funct3 <= 3'b011));
+    wire bypass_use_rs2 = (bypass_opcode == 7'b0110011) | (bypass_opcode == 7'b0111011)
+                        | (bypass_opcode == 7'b0100011) | (bypass_opcode == 7'b1100011);
+    wire bypass_rs1 = i_exu_load_bypass_vld & (i_exu_load_bypass_rd != 5'b0)
+                    & bypass_use_rs1 & (reg_alu_inst[19:15] == i_exu_load_bypass_rd);
+    wire bypass_rs2 = i_exu_load_bypass_vld & (i_exu_load_bypass_rd != 5'b0)
+                    & bypass_use_rs2 & (reg_alu_inst[24:20] == i_exu_load_bypass_rd);
+    wire [`RV64IM_CORE_DATA_WIDTH-1:0] alu_rs1_data =
+        bypass_rs1 ? i_exu_load_bypass_data : reg_alu_rs1_data;
+    wire [`RV64IM_CORE_DATA_WIDTH-1:0] alu_rs2_data =
+        bypass_rs2 ? i_exu_load_bypass_data : reg_alu_rs2_data;
+
     wire alu_intr_ecall;
     wire alu_intr_ebreak;
     wire alu_intr_mret;
@@ -122,8 +144,8 @@ rv64im_core_id_alu u_rv64im_core_id_alu(
 rv64im_core_alu u_rv64im_core_alu(
     .i_alu_pc           (reg_alu_pc           ),
     .i_alu_inst         (reg_alu_inst         ),
-    .i_alu_rs1_data     (reg_alu_rs1_data     ),
-    .i_alu_rs2_data     (reg_alu_rs2_data     ),
+    .i_alu_rs1_data     (alu_rs1_data         ),
+    .i_alu_rs2_data     (alu_rs2_data         ),
     .i_alu_imm_data     (reg_alu_imm_data     ),
     .i_alu_rd_index     (reg_alu_rd_index     ),
     .i_alu_type_info    (reg_alu_type_info    ),

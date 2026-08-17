@@ -1,0 +1,5 @@
+workload,roi_cycles,dependency_cycles,load_use_cycles,load_hit_use_cycles,miss_related_cycles,mul_dependency_cycles,dependency_fraction_pct
+FIB,11978,224,0,0,0,224,1.870095
+Bubble,1860,190,190,188,2,0,10.215054
+GOL128,590363,127008,127008,126496,512,0,21.513541
+GOL256,2394963,516128,516128,514080,2048,0,21.550563

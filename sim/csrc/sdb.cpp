@@ -286,16 +286,21 @@ void read_elf(char* argv){
 		fseek(fp, shdr[j].sh_offset, SEEK_SET);
 		a=fread(sym_data, sizeof(char)*shdr[j].sh_size, 1, fp);if(a==0) printf("read_elf fail");
 		sym=(Elf64_Sym*)sym_data;
-		int m=0;
+		size_t m = 0;
+		const size_t func_capacity = sizeof(func) / sizeof(func[0]);
+		bool function_symbols_truncated = false;
 		for(int x = 0; x<(shdr[j].sh_size/sizeof(Elf64_Sym)); x++){
-			if((sym[x].st_info & 0x0f)  == 0x02){
+			if ((sym[x].st_info & 0x0f) == 0x02 && m < func_capacity) {
         		func[m].addr = sym[x].st_value;
        			func[m].size = sym[x].st_size;
-        		func[m].name = pstr+sym[x].st_name;
+			func[m].name = pstr+sym[x].st_name;
 				m++;
 				//log_write("Func: %s\t addr is %08lx, size is %lu, \n",pstr+sym[x].st_name,sym[x].st_value,sym[x].st_size);
+			} else if ((sym[x].st_info & 0x0f) == 0x02) {
+				function_symbols_truncated = true;
 			}
 		}
+		if (function_symbols_truncated) printf("ftrace: function symbol table truncated at %zu entries\n", func_capacity);
 		free(sym_data);
 	} else printf("no .symtab");
 	free(shdr);

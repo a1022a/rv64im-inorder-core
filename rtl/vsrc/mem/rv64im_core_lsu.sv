@@ -30,6 +30,7 @@ module rv64im_core_lsu (
     output wire o_lsu_idu_wen, 
     output wire [4:0] o_lsu_idu_index,   
     output wire [`RV64IM_CORE_DATA_WIDTH-1:0] o_lsu_idu_data,
+    output wire o_lsu_load_bypass_vld,
     //to bus
     output wire o_lsu_req_vld,
     output wire o_lsu_wen,
@@ -92,6 +93,7 @@ rv64im_core_ls u_rv64im_core_ls(
   .o_ls_idu_wen      (o_lsu_idu_wen      ),
   .o_ls_idu_index    (o_lsu_idu_index    ),
   .o_ls_idu_data     (o_lsu_idu_data     ),
+  .o_ls_load_bypass_vld (o_lsu_load_bypass_vld),
 
   .o_ls_req_vld     ( o_lsu_req_vld    ),
   .o_ls_wen          ( o_lsu_wen         ),

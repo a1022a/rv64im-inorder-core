@@ -1,0 +1,4 @@
+design,stdcell_area,cell_count,total_area,sram_count,stdcell_delta_vs_baseline_pct,cell_delta_vs_baseline_pct,total_delta_vs_baseline_pct,stdcell_delta_vs_p1_pct,cell_delta_vs_p1_pct,total_delta_vs_p1_pct
+ORIGINAL_BASELINE,80394.104,106605,264938.885248,32,0,0,0,NA,NA,NA
+P1,89473.314,129608,274018.095248,32,11.293401,21.577787,3.426132,0,0,0
+P2R1,88374.538,129063,272919.319248,32,9.926650,21.066554,3.012179,-1.228049,-0.420499,-0.400987

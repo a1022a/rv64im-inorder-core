@@ -1,0 +1,2 @@
+design,dc_status,dc_wns_ns,dc_tns_ns,dc_violations,pt_status,pt_wns_ns,pt_tns_ns,pt_violations,hold_status,hold_wns_ns,total_area,sram_count,power_status
+P2R1,PASS,0.0000971556,0,0,PASS,0.000097,0,0,PASS,0.037408,272919.319248,32,POWER_NOT_CLOSED

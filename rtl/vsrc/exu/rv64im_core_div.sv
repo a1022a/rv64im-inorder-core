@@ -99,6 +99,7 @@ assign div_done = ((rvld_cnt_r - dvld_cnt_r) == cnt) | fast_div_r;
     reg [63:0] rem_reg;
     reg [63:0] div_reg;
     reg [63:0] res_reg;
+    reg div_ready;
 
     wire [63:0] add_op1 = rem_reg;
     wire [63:0] add_op2 = div_reg;
@@ -116,8 +117,12 @@ assign div_done = ((rvld_cnt_r - dvld_cnt_r) == cnt) | fast_div_r;
     wire [63:0] div_reg_ns = ({64{~busy}} & (rs2_abs[63:0] << ~dvld_cnt))
                            | ({64{busy}}  & {1'b0,div_reg[63:1]})
                            ;
+    wire [63:0] quotient_ns = {res_reg[62:0],~add_sign};
+    wire quotient_sign_correction = busy & ~div_ready & div_done & ~fast_div_r
+                                  & (op1_signed ^ op2_signed);
     wire [63:0] res_reg_ns = ({64{~busy}} & 64'b0)
-                           | ({64{busy}}  & {res_reg[62:0],~add_sign})
+                           | ({64{busy & ~quotient_sign_correction}} & quotient_ns)
+                           | ({64{quotient_sign_correction}} & (~quotient_ns + 1'b1))
                            ;
 
     wire data_upd_en = o_alu_div_ack ? ~i_stall : (i_alu_div_req | busy);
@@ -129,7 +134,6 @@ assign div_done = ((rvld_cnt_r - dvld_cnt_r) == cnt) | fast_div_r;
         end 
     end
 
-    reg div_ready;
     wire div_ready_en = div_ready ? ~i_stall : busy;
     always @(posedge clk or negedge rstn) begin
         if(!rstn) begin
@@ -141,9 +145,8 @@ assign div_done = ((rvld_cnt_r - dvld_cnt_r) == cnt) | fast_div_r;
         end
     end
 
-    wire [63:0] div_res_sel = (op1_signed^op2_signed) ? (~res_reg + 1'b1) : res_reg;
     wire [63:0] rem_res_sel = (rem_reg >> ~rvld_cnt_r);
-    assign div_res =  fast_div_r ? {64{~(|dvld_cnt_r)}} : div_res_sel;
+    assign div_res =  fast_div_r ? {64{~(|dvld_cnt_r)}} : res_reg;
     assign div_rem =  op1_signed ? (~rem_res_sel +1)    : rem_res_sel;
 
 

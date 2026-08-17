@@ -1,79 +1,67 @@
-# VS Code, Codex and local IDE state
-.vscode/
-.codex/
-.agents/
-.settings/
-.project
-.library_mapping.xml
-
-# Source indexing files
-cscope.files
-cscope.in.out
-cscope.out
-cscope.po.out
-tags
-
-# Machine-local configuration
-config/local.mk
-synth/config/tech_setup.tcl
-synth/config/local_paths.tcl
-.env
-.env.*
-
-# Build and run outputs
+# Builds and simulator output
 build/
 out/
 obj_dir/
-work/
-results_cpu_*/
-
-# Simulation artifacts
 *.log
 *.vcd
 *.fst
-*.fsdb
 *.vpd
-*.wlf
-*.gtkw
+waveforms/
 
-# Compiled files
-*.o
-*.a
-*.so
-Vtop
-Vtop.*
+# Raw/generated performance data
+*.trace
+*.trace.*
+*.raw.csv
+raw_traces/
+generated/
+results/generated/
+*.bin
+*.elf
+*.hex
+*.dis
 
-# Synthesis, STA and physical-design outputs
+# ASIC databases, netlists, sessions, and proprietary inputs
 *.db
 *.lib
 *.lef
 *.gds
+*.gds2
 *.ndm
 *.sdf
 *.spef
 *.ddc
-*.vdb
+*.svf
+*.session
+*.session.*
+*.mapped.v
+pt_shell_command.log
+default.svf
 
-# Archives and virtual-machine files
+# Archives and VM artifacts
 *.tar
 *.tar.gz
+*.tgz
 *.zip
 *.7z
-*.vmdk
 *.ova
 *.ovf
+*.vmdk
+*.vmem
 
-# Credentials and licenses
-*.pem
-*.key
-*.token
-license.dat
-license.*
+# Local configuration, credentials, and licenses
+config/local.mk
+*.license
 *.lic
+license.dat
+.env
+.env.*
+!.env.example
 
-# Temporary files
-*.swp
-*.tmp
+# Editor, OS, and language caches
+.DS_Store
+Thumbs.db
 *~
+*.swp
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/

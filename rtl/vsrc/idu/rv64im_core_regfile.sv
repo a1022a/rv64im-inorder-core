@@ -1,6 +1,7 @@
 `include "rv64im_core_defines.sv"
 
 module rv64im_core_regfile (
+    input  wire [`RV64IM_CORE_INST_WIDTH-1:0] i_rf_inst,
     input  wire i_rf_wb_stall,
     input  wire [`RV64IM_CORE_DATA_WIDTH-1:0] i_rf_rd_data,
     input  wire [4:0] i_rf_rd_index,
@@ -49,7 +50,20 @@ module rv64im_core_regfile (
     wire mem_hit_rs2 = (i_rf_rs2_index == i_rf_mem_rd_index) &  i_rf_mem_rd_wen ;
     wire wbu_hit_rs2 = (i_rf_rs2_index == i_rf_rd_index) & i_rf_rd_wen;
 
-    assign o_rf_id_flush_ex = ((i_rf_rs1_index == i_rf_exu_rd_index)|(i_rf_rs2_index == i_rf_exu_rd_index)) &  i_rf_exu_rd_wen & (i_rf_exu_load);
+    wire [6:0] opcode = i_rf_inst[6:0];
+    wire [2:0] funct3 = i_rf_inst[14:12];
+    wire use_rs1 = (opcode == 7'b0110011) | (opcode == 7'b0111011)
+                 | (opcode == 7'b0100011) | (opcode == 7'b1100011)
+                 | (opcode == 7'b0000011) | (opcode == 7'b0010011)
+                 | (opcode == 7'b0011011) | (opcode == 7'b1100111)
+                 | ((opcode == 7'b1110011) & (funct3 >= 3'b001) & (funct3 <= 3'b011));
+    wire use_rs2 = (opcode == 7'b0110011) | (opcode == 7'b0111011)
+                 | (opcode == 7'b0100011) | (opcode == 7'b1100011);
+    wire load_use_rs1 = use_rs1 & (i_rf_rs1_index == i_rf_exu_rd_index);
+    wire load_use_rs2 = use_rs2 & (i_rf_rs2_index == i_rf_exu_rd_index);
+    assign o_rf_id_flush_ex = i_rf_exu_rd_wen & i_rf_exu_load
+                            & (i_rf_exu_rd_index != 5'b0)
+                            & (load_use_rs1 | load_use_rs2);
 
     assign o_rf_rs1_data = (i_rf_rs1_index==0) ?  'b0
                          : exu_hit_rs1 ? i_rf_exu_rd_data
