@@ -1,0 +1,14 @@
+PROJECT_WORKSPACE=<project-workspace>
+DC_BIN=<authorized-dc-shell>
+PT_BIN=<authorized-pt-shell>
+STDCELL_MAX_DB=<slow-max-standard-cell-view>
+SRAM_MAX_DB=<slow-max-sram-view>
+STDCELL_MIN_DB=<fast-min-standard-cell-view>
+SRAM_MIN_DB=<fast-min-sram-view>
+STDCELL_MAX_LIB_NAME=standard_cell_slow_max
+STDCELL_MIN_LIB_NAME=standard_cell_fast_min
+SRAM_MIN_LIB_NAME=sram_fast_min
+SRAM_MACRO_REF=SRAM_64X64_SYNC
+GENERIC_DRIVING_CELL=GENERIC_BUFFER_CELL
+GENERIC_FO4_OUTPUT_LOAD=0.01
+CLOCK_PERIOD_NS=2.0
